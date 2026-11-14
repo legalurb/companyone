@@ -1,0 +1,94 @@
+<section class="sec" id="passo-1">
+  <div class="wrap">
+    <div class="p1-head">
+      <div class="p1-head__a">
+        <p class="passo label"><span class="passo__n">1</span>Para quem está começando</p>
+        <h2 class="h2">Sua equipe ajuda a criar a empresa.</h2>
+        <p class="lead soft mt-lead">Você conta a ideia. A equipe cuida do caminho até ela virar empresa de verdade: com nome, marca, endereço na internet e tudo pronto para o seu contador abrir o CNPJ.</p>
+      </div>
+      <p class="p1-head__b">Mais de 5 milhões de empresas foram abertas no Brasil em 2025, segundo o Sebrae. Pelo Mapa de Empresas do governo federal, o registro hoje sai em cerca de um dia. O que decide o futuro do negócio é o que vem antes e depois. É aí que a sua equipe entra.</p>
+    </div>
+
+    <div class="band">
+      <ol class="band__steps">
+        <li class="sub"><span class="sub__n">1.1</span><div><h3 class="h3">Um nome com a sua cara</h3><p class="sub__d">Você descreve o negócio e a equipe propõe nomes. Ou chega com o seu e a gente testa.</p></div></li>
+        <li class="sub"><span class="sub__n">1.2</span><div><h3 class="h3">Registro.br, Instagram e INPI de uma vez</h3><p class="sub__d">Antes de você se apaixonar pelo nome errado: domínio, arroba e marca conferidos juntos, na classe certa do seu negócio.</p></div></li>
+        <li class="sub"><span class="sub__n">1.3</span><div><h3 class="h3">Achou livre? Registra na hora</h3><p class="sub__d">O domínio é registrado dentro da plataforma, com o pagamento ali mesmo. Sem sair para outro site.</p></div></li>
+      </ol>
+      <div class="band__tool">
+        <div class="ficha" id="teste-nome">
+          <div class="ficha__head"><span class="label">Ficha de nascimento</span><span class="ficha__live"><span class="ficha__dot"></span>consulta ao vivo no Registro.br</span></div>
+          <div class="ficha__body">
+            <form class="js-nome-form" novalidate>
+              <label class="flabel" for="nome-teste">Como a sua empresa vai se chamar?</label>
+              <div class="frow">
+                <input class="input" id="nome-teste" name="nome" type="text" placeholder="Ex.: Padaria Aurora" maxlength="40" autocomplete="off" autocapitalize="words">
+                <button class="btn btn--navy" type="submit">Testar nome</button>
+              </div>
+            </form>
+            <dl class="rows">
+              <div class="row"><dt class="row__k label">Domínio</dt><dd class="row__v js-dom">suaempresa.com.br</dd><dd class="row__s js-dom-s">a consultar</dd></div>
+              <div class="row"><dt class="row__k label">Instagram</dt><dd class="row__v js-ig">@suaempresa</dd><dd class="row__s">na verificação completa</dd></div>
+              <div class="row"><dt class="row__k label">Marca</dt><dd class="row__v">INPI, na classe do seu negócio</dd><dd class="row__s">na verificação completa</dd></div>
+            </dl>
+            <p class="ficha__msg js-nome-msg" role="status" aria-live="polite">Digite o nome e veja agora se o domínio .com.br está livre. A equipe confere o Instagram e o INPI para você.</p>
+            <a class="btn btn--red ficha__cta js-nome-cta" data-origem="teste-nome" href="https://wa.me/%%WA%%" target="_blank" rel="noopener" hidden>Quero a verificação completa<span class="btn__star"></span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="band band--flip">
+      <ol class="band__steps" start="4">
+        <li class="sub"><span class="sub__n">1.4</span><div><h3 class="h3">Logomarca e identidade</h3><p class="sub__d">Logo, cores e o kit para as redes sociais, prontos para usar no primeiro dia.</p></div></li>
+        <li class="sub"><span class="sub__n">1.5</span><div><h3 class="h3">O texto pronto para o contador</h3><p class="sub__d">Você explica com o que vai trabalhar. A equipe redige o objeto social, indica os CNAEs e entrega tudo mastigado para o seu contador registrar.</p></div></li>
+        <li class="sub"><span class="sub__n">1.6</span><div><h3 class="h3">A equipe cresce com a empresa</h3><p class="sub__d">Vendeu, comprou, contratou? Comercial, financeiro, estoque e os outros funcionários de IA vão chegando conforme o negócio anda.</p></div></li>
+      </ol>
+      <div class="band__tool">
+        <div class="ficha" id="texto-contador">
+          <div class="ficha__head"><span class="label">Texto pronto para o contador</span><span class="ficha__live">tabela CNAE do IBGE</span></div>
+          <div class="ficha__body">
+            <form class="js-cnae-form" novalidate>
+              <label class="flabel" for="atividade">O que a sua empresa vai fazer?</label>
+              <div class="frow">
+                <input class="input" id="atividade" name="atividade" type="text" placeholder="Ex.: hamburgueria com delivery" maxlength="90" autocomplete="off">
+                <button class="btn btn--navy" type="submit">Gerar texto</button>
+              </div>
+              <p class="quick"><span>Experimente:</span>
+                <button class="pill js-ex" type="button">Hamburgueria com delivery</button>
+                <button class="pill js-ex" type="button">Loja de roupas online</button>
+                <button class="pill js-ex" type="button">Barbearia</button>
+              </p>
+            </form>
+            <div class="cnae js-cnae-out" aria-live="polite">
+              <ul class="js-cnae-list">
+                <li class="cnae__item"><span class="cnae__code">5611-2/03</span><span class="cnae__desc">Lanchonetes, casas de chá, de sucos e similares</span><span class="cnae__tag label">principal</span></li>
+                <li class="cnae__item"><span class="cnae__code">5620-1/04</span><span class="cnae__desc">Fornecimento de alimentos preparados preponderantemente para consumo domiciliar</span><span class="cnae__tag label">secundário</span></li>
+              </ul>
+              <p class="cnae__txt js-cnae-txt">Olá! Vou abrir uma empresa e preciso da sua orientação para o registro.
+
+Atividade: hamburgueria com delivery.
+Objeto social sugerido: lanchonete, com preparo e venda de lanches, porções e bebidas para consumo no local, retirada e entrega em domicílio.
+CNAE principal sugerido: 5611-2/03, Lanchonetes, casas de chá, de sucos e similares.
+CNAE secundário sugerido: 5620-1/04, Fornecimento de alimentos preparados preponderantemente para consumo domiciliar.
+Para validar com você: enquadramento (MEI, ME ou EPP) e regime tributário; alvará de funcionamento e licença sanitária do município.
+
+Texto preparado com a Company One, companyone.com.br</p>
+              <div class="cnae__actions">
+                <button class="btn btn--navy btn--sm js-copy" type="button">Copiar texto</button>
+                <a class="btn btn--line btn--sm js-cnae-wa" href="https://wa.me/?text=" target="_blank" rel="noopener">Enviar ao contador pelo WhatsApp</a>
+              </div>
+            </div>
+            <p class="small cnae__note">Sugestão inicial para os negócios mais comuns, com códigos da tabela CNAE do IBGE. A definição final é sempre do seu contador.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="made">
+      <svg class="made__mark" viewBox="0 0 120 120" aria-hidden="true">%%MARK%%</svg>
+      <p class="made__t">Feito com a própria Company One: o nome, o domínio e a marca que você está vendo nasceram desse jeito.</p>
+      <a class="btn btn--navy" href="#contato">Quero começar assim<span class="btn__star"></span></a>
+    </div>
+  </div>
+</section>

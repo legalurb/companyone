@@ -1,0 +1,18 @@
+      <form class="form js-form" novalidate>
+        <div class="pair">
+          <label class="field"><span class="field__l">Seu nome</span><input class="field__i" name="nome" type="text" autocomplete="name" required></label>
+          <label class="field"><span class="field__l">WhatsApp com DDD</span><input class="field__i" name="whats" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 90000-0000" required></label>
+        </div>
+        <fieldset class="field" style="border:0;padding:0;margin:0">
+          <legend class="field__l" style="padding:0;margin-bottom:8px">Sua empresa</legend>
+          <div class="choice">
+            <label class="choice__o"><input class="choice__r" type="radio" name="fase" value="Vou abrir minha empresa" checked><span class="choice__t">Vou abrir</span></label>
+            <label class="choice__o"><input class="choice__r" type="radio" name="fase" value="Já tenho empresa"><span class="choice__t">Já tenho</span></label>
+          </div>
+        </fieldset>
+        <label class="field"><span class="field__l">Nome da empresa <span class="soft">(se já tiver um em mente)</span></span><input class="field__i" name="empresa" type="text" autocomplete="organization"></label>
+        <label class="field"><span class="field__l">O que ela faz ou vai fazer?</span><textarea class="field__i field__i--area" name="sobre" required></textarea></label>
+        <p class="form__err js-form-err" role="alert" hidden></p>
+        <button class="btn btn--red" type="submit">Enviar pelo WhatsApp<span class="btn__star"></span></button>
+        <p class="form__legal">Ao enviar, você concorda que a Company One use esses dados para falar com você sobre a sua equipe. Veja a <a href="%%B%%privacidade.html">política de privacidade</a>.</p>
+      </form>
