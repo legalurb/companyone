@@ -2,6 +2,22 @@ companyone.com.br {
 	root * /etc/caddy/sites/companyone/site
 	encode gzip zstd
 
+	# registro de acesso por 6 meses (Marco Civil da Internet, art. 15), sem cookies nem origem
+	log {
+		output file /data/logs/companyone-acesso.log {
+			roll_size 50MiB
+			roll_keep 400
+			roll_keep_for 4392h
+		}
+		format filter {
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			request>headers>Referer delete
+			resp_headers>Set-Cookie delete
+			wrap json
+		}
+	}
+
 	@estatico path /assets/*
 	header @estatico Cache-Control "public, max-age=2592000"
 
