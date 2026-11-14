@@ -488,6 +488,177 @@
     btVolta.addEventListener('click', function () { feito.hidden = true; form.hidden = false; });
   }
 
+  /* ---------- plataforma: passeio em vídeo, em partes ---------- */
+  var tour = $('.js-tour');
+  if (tour) {
+    var segs = $$('.tour__seg'), fills = $$('.tour__fill');
+    var capBox = $('.js-tour-cap'), capT = $('.js-tour-t'), capD = $('.js-tour-d');
+    var btPlay = $('.js-tour-play'), btPlayT = $('.js-tour-play-t');
+    var icoPause = $('.js-tour-ico-pause'), icoPlay = $('.js-tour-ico-play');
+    var btFull = $('.js-tour-full'), btBig = $('.js-tour-big');
+    // paisagem (tela inteira da gravação) e celular (recorte quadrado, mesmo tempo de cada parte)
+    var VIDEOS = {
+      grande: 'assets/video/tour-1920.8ea1ebaf.mp4', medio: 'assets/video/tour-1280.61ebe027.mp4',
+      celular: 'assets/video/tour-m1080.1c98ea88.mp4', celularLeve: 'assets/video/tour-m720.d95c8a72.mp4'
+    };
+    var telaCel = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
+    var inicios = segs.map(function (b) { return parseFloat(b.getAttribute('data-t')); });
+    var duracao = parseFloat(tour.getAttribute('data-dur')) || 57;
+    var rede = navigator.connection || {};
+    var poupaDados = !!rede.saveData;
+    var redeLenta = poupaDados || /2g|3g/.test(rede.effectiveType || '');
+    var semAuto = semMovimento || poupaDados;
+    var carregado = false, parouNaMao = false, naTela = false, parte = 0, girando = false, pulo = null, noAr = '';
+
+    // com o script ligado, os controles são os da página; sem ele, ficam os do navegador
+    tour.controls = false;
+    tour.muted = true;
+
+    var arquivo = function () {
+      if (telaCel && telaCel.matches) return redeLenta ? VIDEOS.celularLeve : VIDEOS.celular;
+      var pontos = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) * Math.min(window.devicePixelRatio || 1, 2.5);
+      return pontos >= 1500 && !redeLenta ? VIDEOS.grande : VIDEOS.medio;
+    };
+    var carrega = function () {
+      if (carregado) return;
+      carregado = true;
+      noAr = arquivo();
+      tour.src = noAr;
+    };
+    var emTelaCheia = function () { return (document.fullscreenElement || document.webkitFullscreenElement) === tour; };
+
+    var mostraParte = function (i, anima) {
+      parte = i;
+      segs.forEach(function (b, k) {
+        if (k === i) { b.classList.add('is-on'); b.setAttribute('aria-current', 'true'); }
+        else { b.classList.remove('is-on'); b.removeAttribute('aria-current'); }
+      });
+      capT.textContent = $('.tour__name', segs[i]).textContent;
+      capD.textContent = $('.tour__desc-t', segs[i]).textContent;
+      if (anima && !semMovimento) {
+        capBox.classList.remove('is-in');
+        void capBox.offsetWidth;
+        capBox.classList.add('is-in');
+      }
+    };
+    var pinta = function () {
+      var t = pulo !== null ? pulo : (tour.currentTime || 0), n = inicios.length, atual = 0, i;
+      for (i = 0; i < n; i++) if (t >= inicios[i] - 0.02) atual = i;
+      for (i = 0; i < n; i++) {
+        var fim = i + 1 < n ? inicios[i + 1] : duracao;
+        var p = i < atual ? 1 : i > atual ? 0 : Math.max(0, Math.min(1, (t - inicios[i]) / (fim - inicios[i])));
+        fills[i].style.transform = 'scaleX(' + p.toFixed(4) + ')';
+      }
+      if (atual !== parte) mostraParte(atual, true);
+    };
+    var gira = function () {
+      pinta();
+      if (tour.paused || tour.ended) { girando = false; return; }
+      girando = true;
+      window.requestAnimationFrame(gira);
+    };
+    var botao = function (tocando) {
+      btPlayT.textContent = tocando ? 'Pausar' : 'Tocar';
+      btPlay.setAttribute('aria-label', tocando ? 'Pausar o vídeo' : 'Tocar o vídeo');
+      if (tocando) { icoPause.removeAttribute('hidden'); icoPlay.setAttribute('hidden', ''); }
+      else { icoPlay.removeAttribute('hidden'); icoPause.setAttribute('hidden', ''); }
+    };
+    var toca = function () {
+      carrega();
+      btBig.hidden = true;
+      var p = tour.play();
+      if (p && p.then) p.then(null, function () { if (tour.paused) { btBig.hidden = false; botao(false); } });
+    };
+    var vaiPara = function (i) {
+      var t = inicios[i] + 0.03;
+      parouNaMao = false;
+      if (tour.readyState >= 1) { try { tour.currentTime = t; } catch (err) { pulo = t; } }
+      else pulo = t;
+      mostraParte(i, true);
+      pinta();
+      toca();
+    };
+
+    tour.addEventListener('loadedmetadata', function () {
+      if (tour.duration && isFinite(tour.duration)) duracao = tour.duration;
+      if (pulo !== null) { tour.currentTime = pulo; pulo = null; }
+    });
+    tour.addEventListener('play', function () { botao(true); if (!girando) gira(); });
+    tour.addEventListener('pause', function () { botao(false); pinta(); });
+    tour.addEventListener('seeked', pinta);
+    tour.addEventListener('click', function () {
+      if (tour.controls) return;
+      if (tour.paused) { parouNaMao = false; toca(); }
+      else { parouNaMao = true; tour.pause(); }
+    });
+    segs.forEach(function (b, i) { b.addEventListener('click', function () { vaiPara(i); }); });
+    btPlay.addEventListener('click', function () {
+      if (tour.paused) { parouNaMao = false; toca(); }
+      else { parouNaMao = true; tour.pause(); }
+    });
+    btBig.addEventListener('click', function () { parouNaMao = false; toca(); });
+
+    btFull.addEventListener('click', function () {
+      carrega();
+      try {
+        if (tour.requestFullscreen) tour.requestFullscreen();
+        else if (tour.webkitRequestFullscreen) tour.webkitRequestFullscreen();
+        else if (tour.webkitEnterFullscreen) {
+          if (tour.readyState >= 1) tour.webkitEnterFullscreen();
+          else toca();
+        }
+      } catch (err) { /* navegador sem tela cheia: o vídeo segue na página */ }
+    });
+    var aoMudarTela = function () { tour.controls = emTelaCheia(); };
+    document.addEventListener('fullscreenchange', aoMudarTela);
+    document.addEventListener('webkitfullscreenchange', aoMudarTela);
+    tour.addEventListener('webkitbeginfullscreen', function () { tour.controls = true; });
+    tour.addEventListener('webkitendfullscreen', function () {
+      tour.controls = false;
+      if (!parouNaMao && naTela && !semAuto) toca();
+    });
+
+    // virou o celular ou mudou o tamanho da janela: troca o corte e segue do mesmo ponto
+    var trocaCorte = function () {
+      if (!carregado || arquivo() === noAr) return;
+      var tocando = !tour.paused;
+      pulo = tour.currentTime || 0;
+      noAr = arquivo();
+      tour.src = noAr;
+      if (tocando) toca(); else tour.load();
+    };
+    if (telaCel) {
+      if (telaCel.addEventListener) telaCel.addEventListener('change', trocaCorte);
+      else if (telaCel.addListener) telaCel.addListener(trocaCorte);
+    }
+
+    botao(false);
+    mostraParte(0, false);
+    if (semAuto || !('IntersectionObserver' in window)) {
+      btBig.hidden = false;
+    } else {
+      // começa a baixar um pouco antes de entrar na tela e toca só enquanto está à vista
+      var perto = new IntersectionObserver(function (es) {
+        if (!es[0].isIntersecting) return;
+        carrega();
+        tour.preload = 'auto';
+        perto.disconnect();
+      }, { rootMargin: '700px 0px' });
+      perto.observe(tour);
+      new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          naTela = e.isIntersecting && e.intersectionRatio >= 0.45;
+          if (naTela) { if (!parouNaMao && tour.paused && !document.hidden) toca(); }
+          else if (!tour.paused && !emTelaCheia()) tour.pause();
+        });
+      }, { threshold: [0, 0.2, 0.45, 0.7, 1] }).observe(tour);
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) { if (!tour.paused) tour.pause(); }
+        else if (naTela && !parouNaMao) toca();
+      });
+    }
+  }
+
   // quem escolhe uma porta já chega ao formulário com a opção marcada
   $$('a[href="#passo-2"]').forEach(function (a) {
     a.addEventListener('click', function () {
