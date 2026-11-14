@@ -21,6 +21,17 @@ companyone.com.br {
 	@estatico path /assets/*
 	header @estatico Cache-Control "public, max-age=2592000"
 
+	# as páginas são sempre conferidas com o servidor: mudou no GitHub, mudou para quem abre
+	@paginas {
+		not path /assets/* /e
+	}
+	header @paginas Cache-Control "no-cache"
+
+	# contagem de visitas e cliques (sem cookies): o pedido só deixa uma linha no registro acima
+	@evento path /e
+	header @evento Cache-Control "no-store"
+	respond @evento 204
+
 	header {
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"

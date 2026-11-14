@@ -9,16 +9,95 @@
      endpoint: opcional, endereço que recebe o formulário por POST (JSON)
      ------------------------------------------------------------------ */
   var CONFIG = {
-    whatsapp: '',
+    whatsapp: '5527999836371',
     email: 'contato@companyone.com.br',
     endpoint: ''
   };
+  // pasta onde o site está (as páginas internas ficam um nível abaixo)
+  var BASE = ((document.currentScript && document.currentScript.src) || '').replace(/assets\/js\/[^/]*$/, '');
 
   function $(s, c) { return (c || document).querySelector(s); }
   function $$(s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); }
   function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
   function dois(n) { return ('0' + n).slice(-2); }
   var semMovimento = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---------- medição: só contagens, sem cookies e sem identificar ninguém ----------
+     Cada chamada vira uma linha no registro do próprio servidor (endereço /e).
+     Quem pede ao navegador para não ser rastreado não entra na conta. */
+  var NO_SITE = /(^|\.)companyone\.com\.br$/.test(location.hostname);
+  function mede(tipo, dados) {
+    if (!NO_SITE || navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
+    var q = 't=' + encodeURIComponent(tipo) + '&p=' + encodeURIComponent(location.pathname);
+    if (dados) Object.keys(dados).forEach(function (k) {
+      if (dados[k] !== '' && dados[k] !== null && dados[k] !== undefined) q += '&' + k + '=' + encodeURIComponent(String(dados[k]).slice(0, 60));
+    });
+    try { if (navigator.sendBeacon && navigator.sendBeacon('/e?' + q)) return; } catch (err) { /* cai no pedido de imagem */ }
+    new Image().src = '/e?' + q;
+  }
+  (function () {
+    var origem = '', par = null;
+    try {
+      if (document.referrer) {
+        var h = new URL(document.referrer).hostname;
+        if (h && h.indexOf('companyone.com.br') < 0) origem = h;
+      }
+      par = new URLSearchParams(location.search);
+    } catch (err) { /* navegador antigo: conta a visita sem a origem */ }
+    var larg = window.innerWidth || 0;
+    mede('pv', {
+      r: origem, us: par && par.get('utm_source'), um: par && par.get('utm_medium'), uc: par && par.get('utm_campaign'),
+      w: larg < 700 ? 'cel' : larg < 1100 ? 'tab' : 'pc'
+    });
+    // até onde a pessoa rolou a página: 25, 50, 75 e 100%
+    var marcas = [25, 50, 75, 100], vistas = {}, esperando = false;
+    window.addEventListener('scroll', function () {
+      if (esperando) return;
+      esperando = true;
+      setTimeout(function () {
+        esperando = false;
+        var de = document.documentElement, total = de.scrollHeight - window.innerHeight;
+        var pct = total > 0 ? (window.scrollY || de.scrollTop) / total * 100 : 100;
+        marcas.forEach(function (m) { if (pct >= m - 1 && !vistas[m]) { vistas[m] = true; mede('rolou', { d: m }); } });
+      }, 400);
+    }, { passive: true });
+  })();
+
+  /* ---------- WhatsApp da empresa: todo botão abre a conversa já com a mensagem ---------- */
+  var MSG_PADRAO = 'Olá! Vim pelo site da Company One e quero conhecer.';
+  function linkWa(texto) { return 'https://wa.me/' + CONFIG.whatsapp + '?text=' + encodeURIComponent(texto || MSG_PADRAO); }
+  if (CONFIG.whatsapp) {
+    $$('.js-wa').forEach(function (a) {
+      a.href = linkWa(a.getAttribute('data-wa'));
+      a.addEventListener('click', function () { mede('wa', { o: a.getAttribute('data-origem') || '' }); });
+    });
+  }
+
+  /* ---------- botão flutuante do WhatsApp ----------
+     Na abertura já existem dois botões de WhatsApp; o flutuante entra depois da primeira tela
+     e sai de cena no contato e no rodapé, onde o botão já está à mão. */
+  var boia = $('.wa-float');
+  if (boia) {
+    var noFim = {}, passou = false;
+    var mostraBoia = function () {
+      var some = false;
+      Object.keys(noFim).forEach(function (k) { if (noFim[k]) some = true; });
+      boia.classList.toggle('is-on', passou && !some);
+    };
+    var rolouBoia = function () {
+      var agora = (window.scrollY || document.documentElement.scrollTop) > window.innerHeight * 0.6;
+      if (agora !== passou) { passou = agora; mostraBoia(); }
+    };
+    window.addEventListener('scroll', rolouBoia, { passive: true });
+    rolouBoia();
+    if ('IntersectionObserver' in window) {
+      var meio = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { noFim[e.target.id || e.target.className] = e.isIntersecting; });
+        mostraBoia();
+      }, { rootMargin: '-49% 0px -49% 0px' });
+      [$('#contato'), $('.foot')].forEach(function (el) { if (el) meio.observe(el); });
+    }
+  }
 
   /* ---------- menu no celular ---------- */
   var toggle = $('.nav__toggle'), menu = $('#menu');
@@ -120,15 +199,15 @@
     if (status === 'free') {
       elDomS.textContent = 'aparece livre';
       elDomS.classList.add('is-ok');
-      elNomeMsg.textContent = 'Boa notícia: ' + slug + '.com.br aparece livre no Registro.br agora. Falta conferir o Instagram e a marca no INPI, e isso o time faz para você.';
+      elNomeMsg.textContent = 'Boa notícia: ' + slug + '.com.br aparece livre no Registro.br agora. Falta conferir o Instagram e a marca no INPI, e isso a equipe faz para você.';
     } else if (status === 'taken') {
       elDomS.textContent = 'já registrado';
       elDomS.classList.add('is-no');
-      elNomeMsg.textContent = slug + '.com.br já tem dono. Na plataforma, o time sugere variações livres sem perder a ideia do nome.';
+      elNomeMsg.textContent = slug + '.com.br já tem dono. Na plataforma, a equipe sugere variações livres sem perder a ideia do nome.';
     } else {
       elDomS.textContent = NO_AR ? 'consulta indisponível' : 'no site publicado';
       elNomeMsg.textContent = NO_AR
-        ? 'Não consegui consultar o Registro.br agora. Na verificação completa, o time confere o domínio, o Instagram e o INPI.'
+        ? 'Não consegui consultar o Registro.br agora. Na verificação completa, a equipe confere o domínio, o Instagram e o INPI.'
         : 'Nesta prévia a consulta ao vivo fica desligada. No site publicado, o resultado do Registro.br aparece aqui na hora.';
     }
   }
@@ -158,6 +237,12 @@
         if (teste.slug !== slug) return;
         teste.status = status;
         situacaoDominio(status, slug);
+        mede('nome', { s: status });
+        if (CONFIG.whatsapp) {
+          var achado = status === 'free' ? ' O domínio ' + slug + '.com.br aparece livre.' : status === 'taken' ? ' O domínio ' + slug + '.com.br já tem dono.' : '';
+          elNomeCta.setAttribute('data-wa', 'Olá! Testei o nome "' + nome + '" no site da Company One.' + achado + ' Quero a verificação completa, com Instagram e INPI.');
+          elNomeCta.href = linkWa(elNomeCta.getAttribute('data-wa'));
+        }
         elNomeCta.hidden = false;
         var campoEmpresa = $('.js-form [name=empresa]');
         if (campoEmpresa && !campoEmpresa.value) campoEmpresa.value = nome;
@@ -326,7 +411,7 @@
   }
 
   var formCnae = $('.js-cnae-form'), campoAtiv = $('#atividade');
-  var elLista = $('.js-cnae-list'), elTxt = $('.js-cnae-txt'), elCopiar = $('.js-copy'), elWa = $('.js-wa');
+  var elLista = $('.js-cnae-list'), elTxt = $('.js-cnae-txt'), elCopiar = $('.js-copy'), elWa = $('.js-cnae-wa');
   var elNota = $('.cnae__note'), elAcoes = $('.cnae__actions');
   var ultimaAtividade = null;
 
@@ -369,6 +454,7 @@
     var r = identifica(descricao);
     if (r.tipo === 'vazio') { campoAtiv.focus(); return; }
     elLista.textContent = '';
+    mede('cnae', { g: r.tipo === 'ok' ? r.p : r.tipo });
     if (r.tipo === 'ok') {
       ultimaAtividade = r;
       elLista.appendChild(linhaCnae(r.p, 'principal'));
@@ -381,9 +467,9 @@
     ultimaAtividade = null;
     elAcoes.hidden = true;
     if (r.tipo === 'regulada') {
-      elTxt.textContent = 'Essa é uma atividade regulamentada: além do CNAE, costuma exigir registro em conselho profissional ou licença específica. Na plataforma, o time monta o caso completo para o seu contador.';
+      elTxt.textContent = 'Essa é uma atividade regulamentada: além do CNAE, costuma exigir registro em conselho profissional ou licença específica. Na plataforma, a equipe monta o caso completo para o seu contador.';
     } else {
-      elTxt.textContent = 'Essa atividade não está na demonstração, que cobre os negócios mais comuns. Na plataforma, o time analisa a sua descrição, indica os CNAEs e monta o texto para o contador.';
+      elTxt.textContent = 'Essa atividade não está na demonstração, que cobre os negócios mais comuns. Na plataforma, a equipe analisa a sua descrição, indica os CNAEs e monta o texto para o contador.';
     }
     elNota.textContent = 'Conte o que você vai fazer no formulário no fim da página e receba o seu caso analisado.';
     var campoSobre = $('.js-form [name=sobre]');
@@ -441,7 +527,7 @@
       if (whats.replace(/\D/g, '').length < 10) return falha('Confira o WhatsApp: precisa do DDD e do número.', f.whats);
       if (sobre.length < 5) return falha('Conte em uma ou duas linhas o que a empresa faz ou vai fazer.', f.sobre);
 
-      var linhas = ['Olá! Quero meu time na Company One.', '', 'Nome: ' + nome, 'WhatsApp: ' + whats, 'Situação: ' + fase];
+      var linhas = ['Olá! Quero minha equipe na Company One.', '', 'Nome: ' + nome, 'WhatsApp: ' + whats, 'Situação: ' + fase];
       if (empresa) linhas.push('Empresa: ' + empresa);
       linhas.push('O que faz: ' + sobre);
       if (teste.slug && (teste.status === 'free' || teste.status === 'taken')) {
@@ -451,11 +537,14 @@
 
       function mostraPronta() {
         elMsgPronta.textContent = mensagem;
+        mede('form', { f: fase === 'Já tenho empresa' ? 'tem' : 'abrir' });
         if (CONFIG.whatsapp) {
-          btWa.href = 'https://wa.me/' + CONFIG.whatsapp + '?text=' + encodeURIComponent(mensagem);
+          btWa.href = linkWa(mensagem);
           btWa.hidden = false;
+          // abre a conversa na hora; se o navegador segurar a janela, o botão continua na tela
+          try { window.open(btWa.href, '_blank', 'noopener'); } catch (err) { /* segue com o botão */ }
         }
-        btMail.href = 'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent('Quero meu time Company One') + '&body=' + encodeURIComponent(mensagem);
+        btMail.href = 'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent('Quero minha equipe Company One') + '&body=' + encodeURIComponent(mensagem);
         form.hidden = true;
         feito.hidden = false;
         feito.scrollIntoView({ block: 'nearest', behavior: semMovimento ? 'auto' : 'smooth' });
@@ -498,8 +587,8 @@
     var btFull = $('.js-tour-full'), btBig = $('.js-tour-big');
     // paisagem (tela inteira da gravação) e celular (recorte quadrado, mesmo tempo de cada parte)
     var VIDEOS = {
-      grande: 'assets/video/tour-1920.8ea1ebaf.mp4', medio: 'assets/video/tour-1280.61ebe027.mp4',
-      celular: 'assets/video/tour-m1080.1c98ea88.mp4', celularLeve: 'assets/video/tour-m720.d95c8a72.mp4'
+      grande: BASE + 'assets/video/tour-1920.8ea1ebaf.mp4', medio: BASE + 'assets/video/tour-1280.61ebe027.mp4',
+      celular: BASE + 'assets/video/tour-m1080.1c98ea88.mp4', celularLeve: BASE + 'assets/video/tour-m720.d95c8a72.mp4'
     };
     var telaCel = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
     var inicios = segs.map(function (b) { return parseFloat(b.getAttribute('data-t')); });
@@ -527,8 +616,10 @@
     };
     var emTelaCheia = function () { return (document.fullscreenElement || document.webkitFullscreenElement) === tour; };
 
+    var contou = {};
     var mostraParte = function (i, anima) {
       parte = i;
+      if (anima && !tour.paused && !contou[i]) { contou[i] = true; mede('video', { a: 'parte', n: i + 1 }); }
       segs.forEach(function (b, k) {
         if (k === i) { b.classList.add('is-on'); b.setAttribute('aria-current', 'true'); }
         else { b.classList.remove('is-on'); b.removeAttribute('aria-current'); }
@@ -583,7 +674,11 @@
       if (tour.duration && isFinite(tour.duration)) duracao = tour.duration;
       if (pulo !== null) { tour.currentTime = pulo; pulo = null; }
     });
-    tour.addEventListener('play', function () { botao(true); if (!girando) gira(); });
+    tour.addEventListener('play', function () {
+      botao(true);
+      if (!girando) gira();
+      if (!contou.inicio) { contou.inicio = true; mede('video', { a: 'inicio', c: telaCel && telaCel.matches ? 'cel' : 'pc' }); }
+    });
     tour.addEventListener('pause', function () { botao(false); pinta(); });
     tour.addEventListener('seeked', pinta);
     tour.addEventListener('click', function () {
@@ -659,11 +754,4 @@
     }
   }
 
-  // quem escolhe uma porta já chega ao formulário com a opção marcada
-  $$('a[href="#passo-2"]').forEach(function (a) {
-    a.addEventListener('click', function () {
-      var r = $('.js-form [name=fase][value="Já tenho empresa"]');
-      if (r) r.checked = true;
-    });
-  });
 })();
