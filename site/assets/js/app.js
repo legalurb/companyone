@@ -76,6 +76,17 @@
     }, 3800);
   }
 
+  /* ---------- linha do dia: marca o horário mais próximo de agora ---------- */
+  var horarios = $$('.day__i');
+  if (horarios.length) {
+    var agoraMin = new Date().getHours() * 60 + new Date().getMinutes(), atual = horarios[horarios.length - 1];
+    horarios.forEach(function (li) {
+      var t = $('.day__h', li).firstChild.textContent.split(':');
+      if (parseInt(t[0], 10) * 60 + parseInt(t[1], 10) <= agoraMin) atual = li;
+    });
+    atual.classList.add('is-now');
+  }
+
   /* ---------- teste de nome: consulta ao vivo no Registro.br ---------- */
   var teste = { nome: '', slug: '', status: '' };
   var formNome = $('.js-nome-form'), campoNome = $('#nome-teste');
