@@ -26,8 +26,10 @@
      Cada chamada vira uma linha no registro do próprio servidor (endereço /e).
      Quem pede ao navegador para não ser rastreado não entra na conta. */
   var NO_SITE = /(^|\.)companyone\.com\.br$/.test(location.hostname);
+  var FORA_DA_CONTA = false;   // o dono pode tirar o próprio aparelho da conta, pelo painel
+  try { FORA_DA_CONTA = localStorage.getItem('co-sem-contagem') === '1'; } catch (err) { /* sem acesso ao armazenamento: conta normalmente */ }
   function mede(tipo, dados) {
-    if (!NO_SITE || navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
+    if (!NO_SITE || FORA_DA_CONTA || navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
     var q = 't=' + encodeURIComponent(tipo) + '&p=' + encodeURIComponent(location.pathname);
     if (dados) Object.keys(dados).forEach(function (k) {
       if (dados[k] !== '' && dados[k] !== null && dados[k] !== undefined) q += '&' + k + '=' + encodeURIComponent(String(dados[k]).slice(0, 60));
