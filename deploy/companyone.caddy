@@ -1,0 +1,25 @@
+companyone.com.br {
+	root * /etc/caddy/sites/companyone/site
+	encode gzip zstd
+
+	@estatico path /assets/*
+	header @estatico Cache-Control "public, max-age=2592000"
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+
+	file_server
+}
+
+www.companyone.com.br {
+	redir https://companyone.com.br{uri} permanent
+}
